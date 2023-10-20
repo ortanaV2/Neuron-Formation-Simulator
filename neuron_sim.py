@@ -7,25 +7,14 @@ import tkinter as tk
 import time
 import random
 import pickle
-tribes = 1 #fixed
 
+tribes = 1 #change not recommended
 coord_vis = False
 tribe_vis = False
-cell_size = 4 #zoom (1 recommended)
+cell_size = 4 #zoom (1 recommended for full view)
 nucleus_belonging_range = (-9, 10)
 max_neuron = 100
 max_cells = None
-
-def nucleus_radius(coord): #quadrant range (nucleus_belonging_range)
-    x, y = coord
-    for x_offset in range(nucleus_belonging_range[0], nucleus_belonging_range[1]):
-        for y_offset in range(nucleus_belonging_range[0], nucleus_belonging_range[1]):
-            if x_offset == 0 and y_offset == 0:
-                continue
-            if (x + x_offset, y + y_offset) in grid_data:
-                if grid_data[(x + x_offset, y + y_offset)]["state"] == 1:
-                    return (x + x_offset, y + y_offset)
-    return False
 
 def kill_cell(coord):
     del grid_data[coord]
@@ -70,6 +59,17 @@ def get_dendrite_amount_range2(coord): #5x5 quadrant range
                     amount += 1
     return amount
 
+def nucleus_radius(coord): #quadrant range (nucleus_belonging_range)
+    x, y = coord
+    for x_offset in range(nucleus_belonging_range[0], nucleus_belonging_range[1]):
+        for y_offset in range(nucleus_belonging_range[0], nucleus_belonging_range[1]):
+            if x_offset == 0 and y_offset == 0:
+                continue
+            if (x + x_offset, y + y_offset) in grid_data:
+                if grid_data[(x + x_offset, y + y_offset)]["state"] == 1:
+                    return (x + x_offset, y + y_offset)
+    return False
+
 def update_visualization():
     canvas.delete("all")
     for coord, data in grid_data.items():
@@ -98,7 +98,7 @@ def update_visualization():
                 fill="black"
             )
     
-    #simulation
+    #simulation-calculations
     used = get_used()
     sim_count = 0
     for coord in used:
@@ -124,6 +124,7 @@ def update_visualization():
             if len_used == max_cells: #crash prevention
                 print("Max cells reached")
                 break
+        #logging
         print("-"*20)
         print(f"Evolution_Cycle: {sim_count}/{len_used}")
         print("Cells: "+str(len_used))
@@ -229,7 +230,6 @@ def update_visualization():
                                     if nucleus != False:
                                         grid_data[nucleus]["process"] = 1
                                     
-                        
     root.after(1, update_visualization) #refreshrate
 
 def zoom(event):
@@ -270,7 +270,5 @@ canvas = tk.Canvas(root, width=800, height=800, bg="white")
 canvas.pack()
 
 update_visualization()
-
 canvas.bind("<MouseWheel>", zoom)
-
 root.mainloop()
