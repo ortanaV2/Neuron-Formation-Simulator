@@ -11,7 +11,7 @@ tribes = 1 #fixed
 
 coord_vis = False
 tribe_vis = False
-cell_size = 1 #zoom (1 recommended)
+cell_size = 4 #zoom (1 recommended)
 nucleus_belonging_range = (-9, 10)
 max_neuron = 100
 max_cells = None
