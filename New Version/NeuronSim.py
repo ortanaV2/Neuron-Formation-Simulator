@@ -25,9 +25,9 @@ class NeuronSim:
     __________________________
     """
 
-    tempset = [[(230, 150), "N", 0, 1, 1.0, False], [(230, 151), "D", 0, 1, 1.0, False]]
-    first_text = True
-    text = None
+    tempset = [[(230, 150), "N", 0, 1, 1.0, False], [(230, 151), "D", 0, 1, 1.0, False]] #Simulation Starting Point Structure
+    first_text = True #program logic (ignore)
+    text = None #program logic (ignore)
 
     def __init__(self, root):
         self.root = root
@@ -72,7 +72,7 @@ class NeuronSim:
         return neighbor_cell_data
     
     #Returns the coords of the radius (1) around the cell
-    def radius_parimeter_coords(self, x, y): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2) if (i, j) != (0, 0)]
+    def radius_parimeter_coords(self, x, y): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2)]
     #Extracts coords from raw neuron_data and only returns a list of coord-tuples
     def extract_coord(self, neuron_data): return [(data[0][0], data[0][1]) for data in neuron_data]
     def start_loop(self): self.root.after(self.loop_interval, self.loop)
@@ -88,8 +88,14 @@ class NeuronSim:
             #Nucleus Calculation
             if part == "N": 
                 neighbor_data = self.neighbor_in_radius(x, y, 2)
-                used_cells = self.extract_coord(neighbor_data)    
+                used_cells = self.extract_coord(neighbor_data)
+                print(neighbor_data)
+                print(used_cells)
+
                 #! CHECKPOINT            
+                #Nucleus building formation using energy
+                #energy used to build neuronal structure
+                #electric input axons for simulation stability and realism (digital technology based)
 
         self.start_loop()
 
