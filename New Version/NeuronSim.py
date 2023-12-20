@@ -31,16 +31,16 @@ class NeuronSim:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("NeuronGrowthSim")
+        self.root.title("Neuron Growing Simulator")
         self.root.configure(bg="#0f0f0f")
 
         self.canvas = tk.Canvas(root, width=900, height=600, borderwidth=0, highlightthickness=0, bg="#0f0f0f")
         self.canvas.pack(expand=True, anchor="center")
 
-        self.cell_width = 2
-        self.cell_height = 2
+        self.cell_width = 2 #Default=2
+        self.cell_height = 2 #Default=2
 
-        self.loop_interval = 500 #loop sleep speed
+        self.loop_interval = 500 #loop-time-sleep in milliseconds
         self.start_loop()
 
     #Draws a pixel on the canvas and raises the title text 
@@ -49,13 +49,14 @@ class NeuronSim:
         y1 = y * self.cell_height
         x2 = x1 + self.cell_width
         y2 = y1 + self.cell_height
-        rect = self.canvas.create_rectangle(x1, y1, x2, y2, outline=color, fill=color) #Create pixel
+        rect = self.canvas.create_oval(x1, y1, x2, y2, outline=color, fill=color) #Create pixel
 
         # Upper right title text
         if NeuronSim.first_text:
             text_x = 850
             text_y = 20
-            NeuronSim.text = self.canvas.create_text(text_x, text_y, text="NGS-v2", font=("Consolas", 12), fill="white")
+            NeuronSim.text = self.canvas.create_text(text_x+14, text_y, text="N-G-S", font=("Consolas", 12), fill="white")
+            NeuronSim.text = self.canvas.create_text(text_x-10, text_y+20, text="210µm - 360µm", font=("Consolas", 9), fill="white")
             NeuronSim.first_text = False
         else:
             self.canvas.tag_raise(NeuronSim.text, rect) #raise text over pixels
@@ -72,7 +73,7 @@ class NeuronSim:
         return neighbor_cell_data
     
     #Returns the coords of the radius (1) around the cell
-    def radius_parimeter_coords(self, x, y): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2)]
+    def radius_perimeter_coords(self, x, y): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2) if (x+i, y+j) != (x, y)]
     #Extracts coords from raw neuron_data and only returns a list of coord-tuples
     def extract_coord(self, neuron_data): return [(data[0][0], data[0][1]) for data in neuron_data]
     def start_loop(self): self.root.after(self.loop_interval, self.loop)
@@ -88,9 +89,16 @@ class NeuronSim:
             #Nucleus Calculation
             if part == "N": 
                 neighbor_data = self.neighbor_in_radius(x, y, 2)
-                used_cells = self.extract_coord(neighbor_data)
+                used_coords = self.extract_coord(neighbor_data)
+                radius_coords = self.radius_perimeter_coords(x, y)
                 print(neighbor_data)
-                print(used_cells)
+                print(used_coords)
+                print(radius_coords)
+
+                #? nucleus with soma shell (testing)
+                self.draw_gridbox(x, y, "red")
+                for coord in radius_coords:
+                    self.draw_gridbox(coord[0], coord[1], "yellow")
 
                 #! CHECKPOINT            
                 #Nucleus building formation using energy
