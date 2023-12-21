@@ -86,20 +86,14 @@ class NeuronSim:
             part, tribe, origin, energy, is_visualized = neuron_data[1], neuron_data[2], neuron_data[3], neuron_data[4], neuron_data[5] #Neuron_data extracted from tempset
             print(x, y, part, f"[t:{tribe} Origin:{origin}] {energy}e", is_visualized) #Calculation Step Vis
             
+            neighbor_data = self.neighbor_in_radius(x, y, 2)
+            used_coords = self.extract_coord(neighbor_data)
+            radius_coords = self.radius_perimeter_coords(x, y)
+
             #Nucleus Calculation
             if part == "N": 
-                neighbor_data = self.neighbor_in_radius(x, y, 2)
-                used_coords = self.extract_coord(neighbor_data)
-                radius_coords = self.radius_perimeter_coords(x, y)
-                print(neighbor_data)
-                print(used_coords)
-                print(radius_coords)
-
-                #? nucleus with soma shell (testing)
-                self.draw_gridbox(x, y, "red")
-                for coord in radius_coords:
-                    self.draw_gridbox(coord[0], coord[1], "yellow")
-
+                pass
+            
                 #! CHECKPOINT            
                 #Nucleus building formation using energy
                 #energy used to build neuronal structure
