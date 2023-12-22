@@ -1,6 +1,6 @@
 import tkinter as tk
 import random
-import time
+
 
 class NeuronSim:
     """
@@ -16,8 +16,8 @@ class NeuronSim:
     __________________________
     > tempset structure:
 
-    [(x, y), structure_type, tribe, origin, energy_level]
-    [(int, int),  str,       str,    int,      float]
+    [(x, y), structure_type, tribe, origin, energy_level, visualized]
+    [(int, int),  str,       int,    int,    float,          bool]
 
     Tribes -> Separates different dendrite branches
     Origin -> Separates different neurons
@@ -25,12 +25,7 @@ class NeuronSim:
     __________________________
     """
 
-    #* Simulation Thresholds
-    tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(60, 75), "N", "FF1F", 2, 1.0], [(170, 75), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
-    mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
-    calculation_speed = 500 #Simulation updating-speed (in ms)
-
-    #* Program logic (do not change)
+    tempset = [[(230, 150), "N", 0, 1, 1.0, False], [(230, 151), "D", 0, 1, 1.0, False]] #Simulation Starting Point Structure
     first_text = True #program logic (ignore)
     text = None #program logic (ignore)
     tribes_data = {} #program logic (ignore) (structure = {origin:[tribes]}
@@ -87,14 +82,6 @@ class NeuronSim:
                         neighbor_cell_data.append(cell)
         return neighbor_cell_data
     
-    def start_loop(self): self.root.after(self.loop_interval, self.loop)
-    #Returns a generated tribe-code for dendrite-trees
-    def gen_tribe_code(self):
-        code_characters = ["F", "H", "A", "C", "Q", 0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
-        key1, key2, key3, key4 = random.choice(code_characters), random.choice(code_characters), random.choice(code_characters), random.choice(code_characters)
-        return f"{key1}{key2}{key3}{key4}"
-    #Returns the cell_data with the coords that were given
-    def get_cell_data(self, x: int, y: int): return [cell_data for cell_data in NeuronSim.tempset if cell_data[0][0] == x and cell_data[0][1] == y][0] #[0] for preventing list in list
     #Returns the coords of the radius (1) around the cell
     def radius_perimeter_coords(self, x: int, y: int): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2) if (x+i, y+j) != (x, y)]
     #Extracts coords from raw neuron_data and only returns a list of coord-tuples
@@ -109,40 +96,18 @@ class NeuronSim:
             part, tribe, origin, energy = neuron_data[1], neuron_data[2], neuron_data[3], neuron_data[4] #Neuron_data extracted from tempset
             print(x, y, part, f"[t:{tribe} Origin:{origin}] {energy}e") #Calculation Step Vis
             
-            neighbor_data = self.neighbor_in_radius(x, y, 2) #raw cell-data from neighbors (radius=2) #! DELETE IF NOT NEEDED GENERALLY
-            used_coords: list[tuple[int, int]] = self.extract_coord(NeuronSim.tempset) #all used coords
-            radius_coords = self.radius_perimeter_coords(x, y) #coords (radius=1)
-            free_coords = [coords for coords in radius_coords if coords not in used_coords] #free space coords (radius=1)
-            used_radius_coords = [coords for coords in radius_coords if coords in used_coords] #used coords (radius=1)
+            neighbor_data = self.neighbor_in_radius(x, y, 2)
+            used_coords = self.extract_coord(neighbor_data)
+            radius_coords = self.radius_perimeter_coords(x, y)
 
-            #Nucleus Formation (color=purple)
-            if part == "N":
-                #create bigger nucleus if energy is given
-                if radius_coords == free_coords and energy == 1.0:
-                    energy_portion = self.energy_split(energy, len(free_coords)+1) #Energy split (9) -> 8 Radius around itself + itself
-                    self.create_cell("purple", [(x, y), part, tribe, origin, energy_portion]) #Change energy level 
-                    for coords in free_coords:
-                        self.create_cell("purple", [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
-                    continue
-                        
-                #create soma shell if nucleus is structured
-                if free_coords != [] and energy >= 0.1:
-                    for coords in free_coords:
-                        if random.randint(0, NeuronSim.mutation_threshold) == 0: self.create_cell("purple", [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
-                        else: self.create_cell("orange", [coords, "S", tribe, origin, 0]) #create soma but with no energy
-                    continue
+            #Nucleus Calculation
+            if part == "N": 
+                pass
             
-            #!CHECKPOINT --> increase searching range for less dendrite roots 
-            #Soma Formation (color=orange)
-            if part == "S":
-                #check if dendrite is already developed (searching for dendrite in range(1))
-                dendrites_build = False
-                for coords in used_radius_coords:
-                    cell_data = self.get_cell_data(coords[0], coords[1])
-                    if cell_data[1] == "D": dendrites_build = True
-
-                if not dendrites_build: self.create_cell("yellow", [random.choice(free_coords), "D", self.gen_tribe_code(), origin, 0])
-                continue
+                #! CHECKPOINT            
+                #Nucleus building formation using energy
+                #energy used to build neuronal structure
+                #electric input axons for simulation stability and realism (digital technology based)
 
         self.start_loop()
 
