@@ -109,7 +109,7 @@ class NeuronSim:
                     for coords in free_coords:
                         self.create_cell("purple", [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
 
-                #! SOMA FORMATION OR NUCLEUS MUTATION (BUG)
+                #! SOMA FORMATION OR NUCLEUS MUTATION (BUG) --> free_coords not working right?
                 if free_coords != [] and energy > 0.1:
                     print(free_coords)
                     energy_portion = self.energy_split(energy, len(free_coords)+1)
