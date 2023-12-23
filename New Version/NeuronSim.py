@@ -12,6 +12,7 @@ class NeuronSim:
     N = Nucleus (Core)
     D = Dendrites (Receiver)
     A = Axon (Sender)
+    T = Terminal (ConnectionPoint)
     S = Soma (Cell-Body)
     __________________________
     > tempset structure:
@@ -26,9 +27,10 @@ class NeuronSim:
     """
 
     #* Simulation Thresholds
-    tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(60, 75), "N", "FF1F", 2, 1.0], [(170, 75), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
+    tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(90, 75), "N", "FF1F", 2, 1.0], [(170, 75), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
     mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
     calculation_speed = 500 #Simulation updating-speed (in ms)
+    dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
 
     #* Program logic (do not change)
     first_text = True #program logic (ignore)
@@ -50,7 +52,7 @@ class NeuronSim:
         self.start_loop()
 
     #Draws a pixel on the canvas and raises the title text 
-    def create_cell(self, color: str, neuron_data):
+    def manage_cell(self, color: str, neuron_data):
         x, y = neuron_data[0][0], neuron_data[0][1] #Extract coords
         x1 = x * self.cell_width
         y1 = y * self.cell_height
@@ -59,19 +61,22 @@ class NeuronSim:
         rect = self.canvas.create_oval(x1, y1, x2, y2, outline=color, fill=color) #Create pixel
 
         #Update tempset
-        part, tribe, origin, energy = neuron_data[1], neuron_data[2], neuron_data[3], neuron_data[4] #Extract cell-data
-        for cell_data in NeuronSim.tempset: 
-            if cell_data[0][0] == x and cell_data[0][1] == y: (NeuronSim.tempset).remove(cell_data)
-        (NeuronSim.tempset).append([(x, y), part, tribe, origin, energy])
+        try:
+            part, tribe, origin, energy = neuron_data[1], neuron_data[2], neuron_data[3], neuron_data[4] #Extract cell-data
+            for cell_data in NeuronSim.tempset: 
+                if cell_data[0][0] == x and cell_data[0][1] == y: (NeuronSim.tempset).remove(cell_data)
+            (NeuronSim.tempset).append([(x, y), part, tribe, origin, energy])
+        except Exception: pass
 
         #Info text (upper right)
         if NeuronSim.first_text:
             text_x = 850
             text_y = 20
-            NeuronSim.text = self.canvas.create_text(text_x+14, text_y, text="N-G-S", font=("Consolas", 12), fill="white")
+            NeuronSim.text = self.canvas.create_text(text_x+14, text_y, text="N-G-S", font=("Bold Consolas", 12), fill="white")
             NeuronSim.text = self.canvas.create_text(text_x-10, text_y+20, text="210µm - 360µm", font=("Consolas", 9), fill="white")
             NeuronSim.text = self.canvas.create_text(text_x-30, text_y+40, text=f"[N]-M Threshold: {NeuronSim.mutation_threshold}", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(text_x-25, text_y+60, text=f"Step-Interval: {NeuronSim.calculation_speed}", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(text_x-37, text_y+60, text=f"[D]-e Threshold: {NeuronSim.dendrite_formation_threshold}", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(text_x-25, text_y+80, text=f"Step-Interval: {NeuronSim.calculation_speed}", font=("Consolas", 9), fill="white")
             NeuronSim.first_text = False
         else:
             self.canvas.tag_raise(NeuronSim.text, rect) #raise text over pixels
@@ -103,8 +108,9 @@ class NeuronSim:
     def energy_split(e_amount: float, structures: int): return round(e_amount/structures, 3)
     #Main simulation loop for developing neurons
     def loop(self):
-        print("\nCellData reiteration: ") #better visual
+        print() #better debug visual
         for neuron_data in NeuronSim.tempset:
+            # time.sleep(0.02)
             x, y = neuron_data[0][0], neuron_data[0][1] #Coordinates extracted from tempset
             part, tribe, origin, energy = neuron_data[1], neuron_data[2], neuron_data[3], neuron_data[4] #Neuron_data extracted from tempset
             print(x, y, part, f"[t:{tribe} Origin:{origin}] {energy}e") #Calculation Step Vis
@@ -115,34 +121,71 @@ class NeuronSim:
             free_coords = [coords for coords in radius_coords if coords not in used_coords] #free space coords (radius=1)
             used_radius_coords = [coords for coords in radius_coords if coords in used_coords] #used coords (radius=1)
 
-            #Nucleus Formation (color=purple)
+            print(free_coords, used_radius_coords) #debug
+            print(NeuronSim.tribes_data) #debug
+            print() #debug better visual
+
+            #* Nucleus Formation (color=purple)
             if part == "N":
                 #create bigger nucleus if energy is given
                 if radius_coords == free_coords and energy == 1.0:
                     energy_portion = self.energy_split(energy, len(free_coords)+1) #Energy split (9) -> 8 Radius around itself + itself
-                    self.create_cell("purple", [(x, y), part, tribe, origin, energy_portion]) #Change energy level 
+                    self.manage_cell("purple", [(x, y), part, tribe, origin, energy_portion]) #Change energy level 
                     for coords in free_coords:
-                        self.create_cell("purple", [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
+                        self.manage_cell("purple", [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
                     continue
                         
                 #create soma shell if nucleus is structured
                 if free_coords != [] and energy >= 0.1:
                     for coords in free_coords:
-                        if random.randint(0, NeuronSim.mutation_threshold) == 0: self.create_cell("purple", [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
-                        else: self.create_cell("orange", [coords, "S", tribe, origin, 0]) #create soma but with no energy
+                        if random.randint(0, NeuronSim.mutation_threshold) == 0: self.manage_cell("purple", [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
+                        else: self.manage_cell("orange", [coords, "S", tribe, origin, 0]) #create soma but with no energy
                     continue
             
-            #!CHECKPOINT --> increase searching range for less dendrite roots 
-            #Soma Formation (color=orange)
+            #* Soma Formation (color=orange)
             if part == "S":
-                #check if dendrite is already developed (searching for dendrite in range(1))
-                dendrites_build = False
-                for coords in used_radius_coords:
-                    cell_data = self.get_cell_data(coords[0], coords[1])
-                    if cell_data[1] == "D": dendrites_build = True
-
-                if not dendrites_build: self.create_cell("yellow", [random.choice(free_coords), "D", self.gen_tribe_code(), origin, 0])
+                dendrites_build = any(self.get_cell_data(coords[0], coords[1])[1] == "D" for coords in used_radius_coords) #check if dendrite is already developed (searching for dendrite in range(1))
+                if not dendrites_build and free_coords != []: self.manage_cell("yellow", [random.choice(free_coords), "D", self.gen_tribe_code(), origin, 0.2]) #create dendrite if not already developed
                 continue
+
+            #* Dendrite Formation (color=yellow)
+            if part == "D":
+                if energy >= 0.05 and free_coords != []: #dendrite is able to grow
+                    for _ in range(4):
+                        random_coords_choose = random.choice(free_coords)
+                        range_check = self.radius_perimeter_coords(random_coords_choose[0], random_coords_choose[1])
+                        found_used = sum(1 for coords in range_check if coords in used_coords) #amount of structures found in range of random chosen coord
+                        multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting dendrite
+                        #Dendrite tree growth 
+                        if found_used == 1: 
+                            self.manage_cell("yellow", [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                            self.manage_cell("yellow", [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
+                            break
+                        #Dendrite tribes and origins connecting and creating a terminal
+                        else:
+                            for coords in range_check:
+                                if coords in used_coords:
+                                    cell_data = self.get_cell_data(coords[0], coords[1])
+                                    if cell_data[2] != tribe and cell_data[3] != origin:
+                                        self.manage_cell("yellow", [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                                        self.manage_cell("green", [random_coords_choose, "D", tribe, origin, energy * 0]) #creating terminal connection
+                                        #Add tribes with terminal to origin list (self)
+                                        if origin in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[origin].append(tribe)
+                                        else: NeuronSim.tribes_data[origin] = [tribe]
+                                        #Add tribes with terminal to origin list (neighbor)
+                                        if cell_data[3] in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[cell_data[3]].append(cell_data[2])
+                                        else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
+                    continue
+
+                #!CHECKPOINT -> UPDATE TRIBE DELETION 
+                else: #dendrite is not able to grow
+                    if origin in NeuronSim.tribes_data.keys():
+                        dendrite_in_range = sum(1 for coords in radius_coords if coords in used_coords if self.get_cell_data(coords[0], coords[1])[1] == "D" and self.get_cell_data(coords[0], coords[1])[2] != tribe) #returns amount of dendrites in range(1)
+                        if dendrite_in_range == 1 and tribe not in NeuronSim.tribes_data[origin]:
+                            self.manage_cell("#0f0f0f", neuron_data)
+                            NeuronSim.tempset.remove(neuron_data)
+                            print(f"\nREMOVED: {neuron_data}\n")
+                    continue
 
         self.start_loop()
 
