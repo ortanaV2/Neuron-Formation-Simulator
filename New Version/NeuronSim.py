@@ -27,10 +27,16 @@ class NeuronSim:
     """
 
     #* Simulation Thresholds
-    tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(90, 75), "N", "FF1F", 2, 1.0], [(170, 75), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
+    tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(90, 75), "N", "FF1F", 2, 1.0], [(90, 45), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
     mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
     calculation_speed = 500 #Simulation updating-speed (in ms)
     dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
+
+    #* Simulation Graphics
+    nucleus_color = "#333333"
+    soma_color = "#4a4a4a"
+    dendrite_color = "#616161"
+    terminal_color = "#00ffc3"
 
     #* Program logic (do not change)
     first_text = True #program logic (ignore)
@@ -130,22 +136,22 @@ class NeuronSim:
                 #create bigger nucleus if energy is given
                 if radius_coords == free_coords and energy == 1.0:
                     energy_portion = self.energy_split(energy, len(free_coords)+1) #Energy split (9) -> 8 Radius around itself + itself
-                    self.manage_cell("purple", [(x, y), part, tribe, origin, energy_portion]) #Change energy level 
+                    self.manage_cell(NeuronSim.nucleus_color, [(x, y), part, tribe, origin, energy_portion]) #Change energy level 
                     for coords in free_coords:
-                        self.manage_cell("purple", [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
+                        self.manage_cell(NeuronSim.nucleus_color, [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
                     continue
                         
                 #create soma shell if nucleus is structured
                 if free_coords != [] and energy >= 0.1:
                     for coords in free_coords:
-                        if random.randint(0, NeuronSim.mutation_threshold) == 0: self.manage_cell("purple", [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
-                        else: self.manage_cell("orange", [coords, "S", tribe, origin, 0]) #create soma but with no energy
+                        if random.randint(0, NeuronSim.mutation_threshold) == 0: self.manage_cell(NeuronSim.nucleus_color, [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
+                        else: self.manage_cell(NeuronSim.soma_color, [coords, "S", tribe, origin, 0]) #create soma but with no energy
                     continue
             
             #* Soma Formation (color=orange)
             if part == "S":
                 dendrites_build = any(self.get_cell_data(coords[0], coords[1])[1] == "D" for coords in used_radius_coords) #check if dendrite is already developed (searching for dendrite in range(1))
-                if not dendrites_build and free_coords != []: self.manage_cell("yellow", [random.choice(free_coords), "D", self.gen_tribe_code(), origin, 0.2]) #create dendrite if not already developed
+                if not dendrites_build and free_coords != []: self.manage_cell(NeuronSim.dendrite_color, [random.choice(free_coords), "D", self.gen_tribe_code(), origin, 0.2]) #create dendrite if not already developed
                 continue
 
             #* Dendrite Formation (color=yellow)
@@ -158,8 +164,8 @@ class NeuronSim:
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting dendrite
                         #Dendrite tree growth 
                         if found_used == 1: 
-                            self.manage_cell("yellow", [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
-                            self.manage_cell("yellow", [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
+                            self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                            self.manage_cell(NeuronSim.dendrite_color, [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
                             break
                         #Dendrite tribes and origins connecting and creating a terminal
                         else:
@@ -167,8 +173,8 @@ class NeuronSim:
                                 if coords in used_coords:
                                     cell_data = self.get_cell_data(coords[0], coords[1])
                                     if cell_data[2] != tribe and cell_data[3] != origin:
-                                        self.manage_cell("yellow", [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
-                                        self.manage_cell("green", [random_coords_choose, "D", tribe, origin, energy * 0]) #creating terminal connection
+                                        self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                                        self.manage_cell(NeuronSim.terminal_color, [random_coords_choose, "D", tribe, origin, energy * 0]) #creating terminal connection
                                         #Add tribes with terminal to origin list (self)
                                         if origin in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[origin].append(tribe)
                                         else: NeuronSim.tribes_data[origin] = [tribe]
