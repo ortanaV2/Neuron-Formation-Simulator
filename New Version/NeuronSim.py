@@ -1,6 +1,5 @@
 import tkinter as tk
 import random
-import time
 
 class NeuronSim:
     """
@@ -29,14 +28,15 @@ class NeuronSim:
     #* Simulation Thresholds
     tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(90, 75), "N", "FF1F", 2, 1.0], [(90, 45), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
     mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
-    calculation_speed = 500 #Simulation updating-speed (in ms)
+    calculation_speed = 250 #Simulation updating-speed (in ms)
+    dendrite_formation_speed = 2 #Dendrite-tree location choosing tries (default=2)
     dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
 
     #* Simulation Graphics
     nucleus_color = "#333333"
     soma_color = "#4a4a4a"
     dendrite_color = "#616161"
-    terminal_color = "#00ffc3"
+    terminal_color = "#878787"
 
     #* Program logic (do not change)
     first_text = True #program logic (ignore)
@@ -107,7 +107,7 @@ class NeuronSim:
     #Returns the cell_data with the coords that were given
     def get_cell_data(self, x: int, y: int): return [cell_data for cell_data in NeuronSim.tempset if cell_data[0][0] == x and cell_data[0][1] == y][0] #[0] for preventing list in list
     #Returns the coords of the radius (1) around the cell
-    def radius_perimeter_coords(self, x: int, y: int): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2) if (x+i, y+j) != (x, y)]
+    def radius_surrounding_coords(self, x: int, y: int): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2) if (x+i, y+j) != (x, y)]
     #Extracts coords from raw neuron_data and only returns a list of coord-tuples
     def extract_coord(self, neuron_data): return [(data[0][0], data[0][1]) for data in neuron_data]
     @staticmethod 
@@ -121,9 +121,8 @@ class NeuronSim:
             part, tribe, origin, energy = neuron_data[1], neuron_data[2], neuron_data[3], neuron_data[4] #Neuron_data extracted from tempset
             print(x, y, part, f"[t:{tribe} Origin:{origin}] {energy}e") #Calculation Step Vis
             
-            neighbor_data = self.neighbor_in_radius(x, y, 2) #raw cell-data from neighbors (radius=2) #! DELETE IF NOT NEEDED GENERALLY
             used_coords: list[tuple[int, int]] = self.extract_coord(NeuronSim.tempset) #all used coords
-            radius_coords = self.radius_perimeter_coords(x, y) #coords (radius=1)
+            radius_coords = self.radius_surrounding_coords(x, y) #coords (radius=1)
             free_coords = [coords for coords in radius_coords if coords not in used_coords] #free space coords (radius=1)
             used_radius_coords = [coords for coords in radius_coords if coords in used_coords] #used coords (radius=1)
 
@@ -157,9 +156,9 @@ class NeuronSim:
             #* Dendrite Formation (color=yellow)
             if part == "D":
                 if energy >= 0.05 and free_coords != []: #dendrite is able to grow
-                    for _ in range(4):
+                    for _ in range(NeuronSim.dendrite_formation_speed):
                         random_coords_choose = random.choice(free_coords)
-                        range_check = self.radius_perimeter_coords(random_coords_choose[0], random_coords_choose[1])
+                        range_check = self.radius_surrounding_coords(random_coords_choose[0], random_coords_choose[1])
                         found_used = sum(1 for coords in range_check if coords in used_coords) #amount of structures found in range of random chosen coord
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting dendrite
                         #Dendrite tree growth 
@@ -181,17 +180,7 @@ class NeuronSim:
                                         #Add tribes with terminal to origin list (neighbor)
                                         if cell_data[3] in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[cell_data[3]].append(cell_data[2])
                                         else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
-                    continue
-
-                #!CHECKPOINT -> UPDATE TRIBE DELETION 
-                else: #dendrite is not able to grow
-                    if origin in NeuronSim.tribes_data.keys():
-                        dendrite_in_range = sum(1 for coords in radius_coords if coords in used_coords if self.get_cell_data(coords[0], coords[1])[1] == "D" and self.get_cell_data(coords[0], coords[1])[2] != tribe) #returns amount of dendrites in range(1)
-                        if dendrite_in_range == 1 and tribe not in NeuronSim.tribes_data[origin]:
-                            self.manage_cell("#0f0f0f", neuron_data)
-                            NeuronSim.tempset.remove(neuron_data)
-                            print(f"\nREMOVED: {neuron_data}\n")
-                    continue
+                    continue     
 
         self.start_loop()
 
