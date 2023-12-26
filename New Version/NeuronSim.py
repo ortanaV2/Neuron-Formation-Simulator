@@ -28,7 +28,7 @@ class NeuronSim:
     #* Simulation Thresholds
     tempset = [[(115, 75), "N", "FF0F", 1, 1.0], [(90, 75), "N", "FF1F", 2, 1.0], [(90, 45), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
     mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
-    calculation_speed = 250 #Simulation updating-speed (in ms)
+    calculation_speed = 1 #Simulation updating-speed (in ms)
     dendrite_formation_speed = 2 #Dendrite-tree location choosing tries (default=2)
     dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
 
@@ -36,7 +36,7 @@ class NeuronSim:
     nucleus_color = "#333333"
     soma_color = "#4a4a4a"
     dendrite_color = "#616161"
-    terminal_color = "#878787"
+    terminal_color = "#edb600"
 
     #* Program logic (do not change)
     first_text = True #program logic (ignore)
@@ -110,7 +110,7 @@ class NeuronSim:
     def radius_surrounding_coords(self, x: int, y: int): return [(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2) if (x+i, y+j) != (x, y)]
     #Extracts coords from raw neuron_data and only returns a list of coord-tuples
     def extract_coord(self, neuron_data): return [(data[0][0], data[0][1]) for data in neuron_data]
-    @staticmethod 
+    @staticmethod
     def energy_split(e_amount: float, structures: int): return round(e_amount/structures, 3)
     #Main simulation loop for developing neurons
     def loop(self):
@@ -127,16 +127,16 @@ class NeuronSim:
             used_radius_coords = [coords for coords in radius_coords if coords in used_coords] #used coords (radius=1)
 
             print(free_coords, used_radius_coords) #debug
-            print(NeuronSim.tribes_data) #debug
+            print(NeuronSim.tribes_data.keys()) #debug
             print() #debug better visual
 
             #* Nucleus Formation (color=purple)
             if part == "N":
                 #create bigger nucleus if energy is given
-                if radius_coords == free_coords and energy == 1.0:
-                    energy_portion = self.energy_split(energy, len(free_coords)+1) #Energy split (9) -> 8 Radius around itself + itself
+                if energy == 1.0:
+                    energy_portion = self.energy_split(energy, 9) #Energy split (9) -> 8 Radius around itself + itself
                     self.manage_cell(NeuronSim.nucleus_color, [(x, y), part, tribe, origin, energy_portion]) #Change energy level 
-                    for coords in free_coords:
+                    for coords in radius_coords:
                         self.manage_cell(NeuronSim.nucleus_color, [coords, part, tribe, origin, energy_portion]) #Create more nucleus cells
                     continue
                         
@@ -171,16 +171,31 @@ class NeuronSim:
                             for coords in range_check:
                                 if coords in used_coords:
                                     cell_data = self.get_cell_data(coords[0], coords[1])
-                                    if cell_data[2] != tribe and cell_data[3] != origin:
-                                        self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
-                                        self.manage_cell(NeuronSim.terminal_color, [random_coords_choose, "D", tribe, origin, energy * 0]) #creating terminal connection
-                                        #Add tribes with terminal to origin list (self)
-                                        if origin in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[origin].append(tribe)
-                                        else: NeuronSim.tribes_data[origin] = [tribe]
-                                        #Add tribes with terminal to origin list (neighbor)
-                                        if cell_data[3] in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[cell_data[3]].append(cell_data[2])
-                                        else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
-                    continue     
+                                    if cell_data[2] != tribe and cell_data[3] != origin: #checks if other dendrite tribe is in range
+                                        usage_range = [coords for coords in self.radius_surrounding_coords(random_coords_choose[0], random_coords_choose[1]) if coords in used_coords]
+                                        terminal_range_amount = sum(1 for coords in usage_range if self.get_cell_data(coords[0], coords[1])[1] == "T")
+                                        print(terminal_range_amount)
+                                        if terminal_range_amount == 0:
+                                            self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                                            self.manage_cell(NeuronSim.terminal_color, [random_coords_choose, "T", tribe, origin, multiplier]) #creating terminal connection
+                                            #Add tribes with terminal to origin list (self)
+                                            if origin in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[origin].append(tribe)
+                                            else: NeuronSim.tribes_data[origin] = [tribe]
+                                            #Add tribes with terminal to origin list (neighbor)
+                                            if cell_data[3] in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[cell_data[3]].append(cell_data[2])
+                                            else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
+                    continue
+                #If range is big enough --> create nucleus
+                if origin in NeuronSim.tribes_data.keys():
+                    dendrite_connection_amount = sum(1 for coords in used_radius_coords if self.get_cell_data(coords[0], coords[1])[2] == tribe)
+                    if dendrite_connection_amount == 1:
+                        tribe_terminal_amount = len(set(tribes for tribes in NeuronSim.tribes_data[origin]))
+                        if tribe_terminal_amount >= 2:
+                            range_cell_data = self.neighbor_in_radius(x, y, 10)
+                            nucleus_amount = sum(1 for cell_data in range_cell_data if cell_data[1] == "N")
+                            if nucleus_amount == 0:
+                                origin_count = max(cell_data[3] for cell_data in NeuronSim.tempset)+1
+                                self.manage_cell(NeuronSim.nucleus_color, [(x, y), "N", self.gen_tribe_code(), origin_count, 1.0])
 
         self.start_loop()
 
