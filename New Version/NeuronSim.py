@@ -31,6 +31,7 @@ class NeuronSim:
     calculation_speed = 1 #Simulation updating-speed (in ms)
     dendrite_formation_speed = 2 #Dendrite-tree location choosing tries (default=2)
     dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
+    nucleus_expansion = True
 
     #* Simulation Graphics
     nucleus_color = "#333333"
@@ -186,16 +187,17 @@ class NeuronSim:
                                             else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
                     continue
                 #If range is big enough --> create nucleus
-                if origin in NeuronSim.tribes_data.keys():
-                    dendrite_connection_amount = sum(1 for coords in used_radius_coords if self.get_cell_data(coords[0], coords[1])[2] == tribe)
-                    if dendrite_connection_amount == 1:
-                        tribe_terminal_amount = len(set(tribes for tribes in NeuronSim.tribes_data[origin]))
-                        if tribe_terminal_amount >= 2:
-                            range_cell_data = self.neighbor_in_radius(x, y, 10)
-                            nucleus_amount = sum(1 for cell_data in range_cell_data if cell_data[1] == "N")
-                            if nucleus_amount == 0:
-                                origin_count = max(cell_data[3] for cell_data in NeuronSim.tempset)+1
-                                self.manage_cell(NeuronSim.nucleus_color, [(x, y), "N", self.gen_tribe_code(), origin_count, 1.0])
+                if NeuronSim.nucleus_expansion:
+                    if origin in NeuronSim.tribes_data.keys():
+                        dendrite_connection_amount = sum(1 for coords in used_radius_coords if self.get_cell_data(coords[0], coords[1])[2] == tribe)
+                        if dendrite_connection_amount == 1:
+                            tribe_terminal_amount = len(set(tribes for tribes in NeuronSim.tribes_data[origin]))
+                            if tribe_terminal_amount >= 2:
+                                range_cell_data = self.neighbor_in_radius(x, y, 10)
+                                nucleus_amount = sum(1 for cell_data in range_cell_data if cell_data[1] == "N")
+                                if nucleus_amount == 0:
+                                    origin_count = max(cell_data[3] for cell_data in NeuronSim.tempset)+1
+                                    self.manage_cell(NeuronSim.nucleus_color, [(x, y), "N", self.gen_tribe_code(), origin_count, 1.0])
 
         self.start_loop()
 
