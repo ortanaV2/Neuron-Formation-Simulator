@@ -187,6 +187,7 @@ class NeuronSim:
                                             if cell_data[3] in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[cell_data[3]].append(cell_data[2])
                                             else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
                     continue
+                
                 #If range is big enough --> create nucleus
                 if NeuronSim.nucleus_expansion:
                     if origin in NeuronSim.tribes_data.keys():
@@ -200,6 +201,7 @@ class NeuronSim:
                                     origin_count = max(cell_data[3] for cell_data in NeuronSim.tempset)+1
                                     self.manage_cell(NeuronSim.nucleus_color, [(x, y), "N", self.gen_tribe_code(), origin_count, 1.0])
 
+                #Branching setting
                 if energy <= 0.7 and random.randint(1, NeuronSim.branching_chance) == 77 and free_coords != [] and NeuronSim.branching:
                     choosed_coords = random.choice(free_coords)
                     surroundings = [coords for coords in self.radius_surrounding_coords(choosed_coords[0], choosed_coords[1]) if coords in used_coords]
