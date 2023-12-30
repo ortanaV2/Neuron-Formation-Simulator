@@ -2,29 +2,6 @@ import tkinter as tk
 import random
 
 class NeuronSim:
-    """
-    __________________________
-    > Grid Center Position: (230, 150)
-    __________________________
-    > Structure_types // Parts
-
-    N = Nucleus (Core)
-    D = Dendrites (Receiver)
-    A = Axon (Sender)
-    T = Terminal (ConnectionPoint)
-    S = Soma (Cell-Body)
-    __________________________
-    > tempset structure:
-
-    [(x, y), structure_type, tribe, origin, energy_level]
-    [(int, int),  str,       str,    int,      float]
-
-    Tribes -> Separates different dendrite branches
-    Origin -> Separates different neurons
-    Energy_level -> How much energy there is for structure distribution
-    __________________________
-    """
-
     #* Simulation Thresholds
     tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0]] #Simulation Starting Point Structure
     mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
@@ -78,7 +55,7 @@ class NeuronSim:
             (NeuronSim.tempset).append([(x, y), part, tribe, origin, energy])
         except Exception: pass
 
-        #Info text (upper right)
+        #Info text (upper left)
         if NeuronSim.first_text:
             NeuronSim.text = self.canvas.create_text(30, 15, text="N-G-S", font=("Bold Consolas", 12), fill="white")
             NeuronSim.text = self.canvas.create_text(52, 40, text="210µm - 360µm", font=("Consolas", 9), fill="white")
