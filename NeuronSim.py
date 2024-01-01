@@ -2,7 +2,7 @@ import tkinter as tk
 import random
 
 class NeuronSim:
-    #* Simulation Thresholds
+    #* Simulation settings and thresholds
     tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0]] #Simulation Starting Point Structure
     mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
     calculation_speed = 250 #Simulation updating-speed (in ms)
