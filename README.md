@@ -1,5 +1,7 @@
 # Neuron Formation Simulator
 ![](https://cdn.discordapp.com/attachments/810456487729168415/1188892289943207956/image.png?ex=659c2d3a&is=6589b83a&hm=a062253131c0375c9b820b90468ddb632bdc2c58cccffecc57e00672c35dacb7&)
+
+Video about the Project: https://youtu.be/JZToyWf-heQ 
 ## Settings and Thresholds
 - Mutation_threshold = (d)10 *"Controlls the randomness of the nucleus for a mutation in the sector"*
 - Calculation_speed = (d)250 *"Time sleep for the iteration interval (in ms)"*
