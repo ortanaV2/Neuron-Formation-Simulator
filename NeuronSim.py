@@ -4,7 +4,7 @@ import random
 class NeuronSim:
     #* Simulation settings and thresholds
     tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0], [(142, 125), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
-    mutation_threshold = 10 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
+    mutation_threshold = 6 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
     calculation_speed = 250 #Simulation updating-speed (in ms)
     dendrite_formation_speed = 4 #Dendrite-tree location choosing tries (default=2)
     dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
@@ -61,7 +61,7 @@ class NeuronSim:
         if NeuronSim.first_text:
             NeuronSim.text = self.canvas.create_text(30, 15, text="N-G-S", font=("Bold Consolas", 12), fill="white")
             NeuronSim.text = self.canvas.create_text(52, 40, text="210µm - 360µm", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(72, 60, text=f"[N]-M Threshold: {NeuronSim.mutation_threshold}", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(69, 60, text=f"[N]-M Threshold: {NeuronSim.mutation_threshold}", font=("Consolas", 9), fill="white")
             NeuronSim.text = self.canvas.create_text(79, 80, text=f"[D]-e Threshold: {NeuronSim.dendrite_formation_threshold}", font=("Consolas", 9), fill="white")
             NeuronSim.text = self.canvas.create_text(70, 100, text=f"Step-Interval: {NeuronSim.calculation_speed}", font=("Consolas", 9), fill="white")
             NeuronSim.text = self.canvas.create_text(87, 120, text=f"Nucleus-expansion: {NeuronSim.neuron_network_expansion}", font=("Consolas", 9), fill="white")
@@ -121,16 +121,11 @@ class NeuronSim:
                     continue
                         
                 #create soma shell if nucleus is structured
-                if energy >= 0.1:
-                    for coords in radius_coords:
-                        if coords in used_radius_coords: 
-                            if self.get_cell_data(coords[0], coords[1])[1] != "N":
-                                if random.randint(0, NeuronSim.mutation_threshold) == 0: self.manage_cell(NeuronSim.nucleus_color, [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
-                                else: self.manage_cell(NeuronSim.soma_color, [coords, "S", tribe, origin, 0]) #create soma but with no energy
-                        else:
-                            if random.randint(0, NeuronSim.mutation_threshold) == 0: self.manage_cell(NeuronSim.nucleus_color, [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
-                            else: self.manage_cell(NeuronSim.soma_color, [coords, "S", tribe, origin, 0]) #create soma but with no energy                        
-                        print("step: creating soma-shell")
+                if free_coords != [] and energy >= 0.1:
+                    for coords in free_coords:
+                        if random.randint(0, NeuronSim.mutation_threshold) == 0: self.manage_cell(NeuronSim.nucleus_color, [coords, "N", tribe, origin, energy]) #create nucleus instead of soma for mutation
+                        else: self.manage_cell(NeuronSim.soma_color, [coords, "S", tribe, origin, 0]) #create soma but with no energy                
+                    print("step: creating soma-shell")
                     continue
                 
             #* Soma Formation (color=orange)
@@ -155,7 +150,7 @@ class NeuronSim:
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting axon
                         #Axon tree growth 
                         if sum(1 for coords in range_check if coords in used_coords) == 1: #checks if amount of structures found in range of random chosen coord is 1
-                            self.manage_cell(NeuronSim.axon_color, [(x, y), "A", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
+                            self.manage_cell(NeuronSim.axon_color, [(x, y), part, tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
                             self.manage_cell(NeuronSim.axon_color, [random_coords_choose, "A", tribe, origin, energy * multiplier]) #enlarge axon tree
                             break
                         #Axon and Dendrite tribes connecting and creating a terminal
@@ -167,7 +162,7 @@ class NeuronSim:
                                         usage_range = [coords for coords in self.radius_surrounding_coords(random_coords_choose[0], random_coords_choose[1]) if coords in used_coords]
                                         terminal_range_amount = sum(1 for coords in usage_range if self.get_cell_data(coords[0], coords[1])[1] == "T")
                                         if terminal_range_amount == 0:
-                                            self.manage_cell(NeuronSim.axon_color, [(x, y), "A", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                                            self.manage_cell(NeuronSim.axon_color, [(x, y), part, tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
                                             self.manage_cell(NeuronSim.terminal_color, [random_coords_choose, "T", tribe, origin, multiplier]) #creating terminal connection
                                             #Add tribes with terminal to origin list (self)
                                             if origin in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[origin].append(tribe)
@@ -179,7 +174,7 @@ class NeuronSim:
                 #If range is big enough --> create nucleus
                 if NeuronSim.neuron_network_expansion:
                     if origin in NeuronSim.tribes_data.keys():
-                        if sum(1 for coords in used_radius_coords if self.get_cell_data(coords[0], coords[1])[2] == tribe) == 1: #checks if it's the dendrite tree-end (dendrite connection amount)
+                        if sum(1 for coords in used_radius_coords if self.get_cell_data(coords[0], coords[1])[2] == tribe) == 1: #checks if it's the axon tree-end (axon connection amount)
                             if len(set(tribes for tribes in NeuronSim.tribes_data[origin])) >= 2: #checks if tribe terminal is bigger or equal 2
                                 if sum(1 for cell_data in self.neighbor_in_radius(x, y, NeuronSim.nucleus_formation_distance) if cell_data[1] == "N") == 0: #checks if nucleus amount in range of 10 is equal to 0
                                     origin_count = max(cell_data[3] for cell_data in NeuronSim.tempset)+1
@@ -189,7 +184,7 @@ class NeuronSim:
 
             #* Dendrite Formation (color=yellow)
             if part == "D":
-                if energy >= 0.025 and free_coords != []: #dendrite is able to grow
+                if energy >= 0.05 and free_coords != []: #dendrite is able to grow
                     for _ in range(NeuronSim.dendrite_formation_speed):
                         random_coords_choose = random.choice(free_coords)
                         range_check = self.radius_surrounding_coords(random_coords_choose[0], random_coords_choose[1])
