@@ -1,5 +1,5 @@
 # Neuron Formation Simulator
-![](https://cdn.discordapp.com/attachments/810456487729168415/1188892289943207956/image.png?ex=659c2d3a&is=6589b83a&hm=a062253131c0375c9b820b90468ddb632bdc2c58cccffecc57e00672c35dacb7&)
+![](https://cdn.discordapp.com/attachments/810456487729168415/1195716206703951882/image.png?ex=65b5007f&is=65a28b7f&hm=dd8d75089833a7f118d16f95321dad2532d21a0834f887b5a9ba5df3b6ca08c1&)
 
 Video about the Project: https://youtu.be/JZToyWf-heQ 
 ## Settings and Thresholds
