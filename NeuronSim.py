@@ -1,17 +1,21 @@
+import json
 import tkinter as tk
 import random
 
 class NeuronSim:
     #* Simulation settings and thresholds
-    tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0], [(142, 125), "N", "FF2F", 3, 1.0]] #Simulation Starting Point Structure
-    mutation_threshold = 6 #mutation threshold for nucleus formation (default=10) (Lower number --> Higher frequency)
+    tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0], [(142, 125), "N", "FF2F", 3, 1.0]] #? Simulation Starting Point Structure
+    mutation_threshold = 6 #? mutation threshold for nucleus formation (default=6) (Lower number --> Higher frequency)
     calculation_speed = 250 #Simulation updating-speed (in ms)
     dendrite_formation_speed = 4 #Dendrite-tree location choosing tries (default=2)
-    dendrite_formation_threshold = 0.97 #Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
-    nucleus_formation_distance = 15 #The minimum distance to another neuron to format a new one
+    dendrite_formation_threshold = 0.97 #? Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
+    nucleus_formation_distance = 15 #? The minimum distance to another neuron to format a new one
     neuron_network_expansion = True
-    branching = False #(default=False)
-    branching_chance = 80 #(default=80)
+    branching = False #! (default=False) EXPERIMENTAL
+    branching_chance = 80 #! (default=80) EXPERIMENTAL
+    branching_chaotic_threshold = 3 #? Threshold for the entanglement of the branches (default=3) (Lower number --> Less entanglement)
+
+    signal_target = 1 #Listening to target origin
 
     #* Simulation Graphics
     nucleus_color = "#333333"
@@ -24,7 +28,14 @@ class NeuronSim:
     first_text = True #program logic (ignore)
     text = None #program logic (ignore)
     tribes_data = {} #program logic (ignore) (structure = {origin:[tribes]}
-    nucleus_expansion = []
+    tribe_to_origin_library = {} #program logic (ignore) (structure = {tribe:origin} "Which tribe belongs to which origin"
+    origin_to_origin_library = {} #program logic (ignore) (structure = {origin:[origin]}
+    nucleus_expansion = [] #program logic (ignore)
+    interaction_signal_data = [] #interaction logic (ignore)
+    time = 0 #interaction logic (ignore)
+    signal_pings = 0 #target_interaction logic (ignore)
+    signal_freq = 0 #target_interaction logic (ignore)
+    signal_e = 0 #target_interaction logic (ignore)
 
     def __init__(self, root):
         self.root = root
@@ -59,15 +70,21 @@ class NeuronSim:
 
         #Info text (upper left)
         if NeuronSim.first_text:
-            NeuronSim.text = self.canvas.create_text(30, 15, text="N-G-S", font=("Bold Consolas", 12), fill="white")
-            NeuronSim.text = self.canvas.create_text(52, 40, text="210µm - 360µm", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(69, 60, text=f"[N]-M Threshold: {NeuronSim.mutation_threshold}", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(79, 80, text=f"[D]-e Threshold: {NeuronSim.dendrite_formation_threshold}", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(70, 100, text=f"Step-Interval: {NeuronSim.calculation_speed}", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(87, 120, text=f"Nucleus-expansion: {NeuronSim.neuron_network_expansion}", font=("Consolas", 9), fill="white")
-            NeuronSim.text = self.canvas.create_text(63, 140, text=f"Branching: {NeuronSim.branching}", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(5, 20, anchor="nw", text="N-G-S", font=("Bold Consolas", 12), fill="white")
+            NeuronSim.text = self.canvas.create_text(5, 40, anchor="nw", text="210µm - 360µm", font=("Italic Consolas", 9), fill="white")
+
+            NeuronSim.text = self.canvas.create_text(5, 80, anchor="nw", text=f"[N]-Mutation Threshold: {NeuronSim.mutation_threshold}", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(5, 100, anchor="nw", text=f"[N]-Formation Distance: {NeuronSim.nucleus_formation_distance}µm", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(5, 120, anchor="nw", text=f"[D]-EnergyLoss Threshold: {NeuronSim.dendrite_formation_threshold}e", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(5, 140, anchor="nw", text=f"Branching-Mess: {NeuronSim.branching_chaotic_threshold}", font=("Consolas", 9), fill="white")
+
+            NeuronSim.text = self.canvas.create_text(5, 180, anchor="nw", text=f"Step-Interval: {NeuronSim.calculation_speed}ms", font=("Consolas", 9), fill="white")
+            NeuronSim.text = self.canvas.create_text(5, 200, anchor="nw", text=f"Network-Expansion: {NeuronSim.neuron_network_expansion}", font=("Consolas", 9), fill="white")
+            NeuronSim.interaction = self.canvas.create_text(450, 580, anchor="center", text=f"Signal-Target({NeuronSim.signal_target}) -> pings:{NeuronSim.signal_pings} -> frequency:{NeuronSim.signal_freq} -> impulse energy:{NeuronSim.signal_e}", font=("Consolas", 9), fill="white")
             NeuronSim.first_text = False
         else:
+            self.canvas.delete(NeuronSim.interaction)
+            NeuronSim.interaction = self.canvas.create_text(450, 580, anchor="center", text=f"Signal-Target({NeuronSim.signal_target}) -> pings:{NeuronSim.signal_pings} -> frequency:{NeuronSim.signal_freq} -> impulse energy:{round(NeuronSim.signal_e, 4)}", font=("Consolas", 9), fill="white")
             self.canvas.tag_raise(NeuronSim.text, rect) #raise text over pixels
 
     #Returns the raw neuron_data from neighbors in a specific radius (radius=quadratic with rounded corners)
@@ -96,6 +113,7 @@ class NeuronSim:
 
     #Main simulation loop for developing neurons
     def loop(self):
+        NeuronSim.time += 1
         for neuron_data in NeuronSim.tempset:
             print() #better visual    
             x, y = neuron_data[0][0], neuron_data[0][1] #Coordinates extracted from tempset
@@ -109,6 +127,9 @@ class NeuronSim:
 
             print(f"free-coords: {free_coords}")
             print("Terminal-origins: "+str(NeuronSim.tribes_data.keys()))
+
+            #? PROGRAM LOGIC
+            if tribe not in NeuronSim.tribe_to_origin_library.keys(): NeuronSim.tribe_to_origin_library[tribe] = origin
 
             #* Nucleus Formation (color=purple)
             if part == "N":
@@ -150,15 +171,16 @@ class NeuronSim:
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting axon
                         #Axon tree growth 
                         if sum(1 for coords in range_check if coords in used_coords) == 1: #checks if amount of structures found in range of random chosen coord is 1
-                            self.manage_cell(NeuronSim.axon_color, [(x, y), part, tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
-                            self.manage_cell(NeuronSim.axon_color, [random_coords_choose, "A", tribe, origin, energy * multiplier]) #enlarge axon tree
-                            break
+                            if len(self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 2)) <= NeuronSim.branching_chaotic_threshold: #checks structure amount in range of 2. (Prevents chaotic branching)
+                                self.manage_cell(NeuronSim.axon_color, [(x, y), part, tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
+                                self.manage_cell(NeuronSim.axon_color, [random_coords_choose, "A", tribe, origin, energy * multiplier]) #enlarge axon tree
+                                break
                         #Axon and Dendrite tribes connecting and creating a terminal
                         else:
                             for coords in range_check:
                                 if coords in used_coords:
                                     cell_data = self.get_cell_data(coords[0], coords[1])
-                                    if cell_data[2] != tribe and cell_data[3] != origin: #checks if other axon tribe is in range
+                                    if cell_data[2] != tribe and cell_data[3] != origin: #checks if dendrite tribe is in range
                                         usage_range = [coords for coords in self.radius_surrounding_coords(random_coords_choose[0], random_coords_choose[1]) if coords in used_coords]
                                         terminal_range_amount = sum(1 for coords in usage_range if self.get_cell_data(coords[0], coords[1])[1] == "T")
                                         if terminal_range_amount == 0:
@@ -170,7 +192,13 @@ class NeuronSim:
                                             #Add tribes with terminal to origin list (neighbor)
                                             if cell_data[3] in NeuronSim.tribes_data.keys(): NeuronSim.tribes_data[cell_data[3]].append(cell_data[2])
                                             else: NeuronSim.tribes_data[cell_data[3]] = [cell_data[2]]
-                
+                                            #Add origin to oto_library
+                                            if cell_data[3] not in NeuronSim.origin_to_origin_library.keys(): NeuronSim.origin_to_origin_library[cell_data[3]] = [origin]
+                                            else: NeuronSim.origin_to_origin_library[cell_data[3]].append(origin)
+                                            if origin not in NeuronSim.origin_to_origin_library.keys(): NeuronSim.origin_to_origin_library[origin] = [cell_data[3]]
+                                            else: NeuronSim.origin_to_origin_library[origin].append(cell_data[3])
+
+
                 #If range is big enough --> create nucleus
                 if NeuronSim.neuron_network_expansion:
                     if origin in NeuronSim.tribes_data.keys():
@@ -191,9 +219,10 @@ class NeuronSim:
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting dendrite
                         #Dendrite tree growth 
                         if sum(1 for coords in range_check if coords in used_coords) == 1: #checks if amount of structures found in range of random chosen coord is 1
-                            self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
-                            self.manage_cell(NeuronSim.dendrite_color, [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
-                            break                        
+                            if len(self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 2)) <= NeuronSim.branching_chaotic_threshold: #checks structure amount in range of 2. (Prevents chaotic branching)
+                                self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                                self.manage_cell(NeuronSim.dendrite_color, [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
+                                break                        
                     print("step: dendrite formation")
                     continue
 
@@ -205,6 +234,18 @@ class NeuronSim:
                         self.manage_cell(NeuronSim.dendrite_color, [choosed_coords, "D", tribe, origin, energy/2])
                         print("step: branching dendrite")
                         continue
+
+        #* Neuronal Interaction
+        for origin_ in NeuronSim.origin_to_origin_library.keys():
+            origin_to_origin_connection = list(set(NeuronSim.origin_to_origin_library[origin_]))
+            NeuronSim.interaction_signal_data.append((NeuronSim.time, (origin, origin_to_origin_connection)))
+            with open("./interaction_data.json", "w") as file:
+                json.dump(NeuronSim.interaction_signal_data, file, indent=2)
+            #Processing/Creating Signal Data
+            if int(origin_) == NeuronSim.signal_target: 
+                NeuronSim.signal_pings = len(origin_to_origin_connection)
+                NeuronSim.signal_freq = round(((len(origin_to_origin_connection)*NeuronSim.signal_pings)*(random.uniform(0.9, 1.1))), 4)
+                NeuronSim.signal_e = random.uniform(0.5, 1.0)/NeuronSim.signal_pings
 
         self.start_loop()
 
