@@ -7,13 +7,14 @@ class NeuronSim:
     tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0], [(142, 125), "N", "FF2F", 3, 1.0]] #? Simulation Starting Point Structure
     mutation_threshold = 6 #? mutation threshold for nucleus formation (default=6) (Lower number --> Higher frequency)
     calculation_speed = 250 #Simulation updating-speed (in ms)
-    dendrite_formation_speed = 4 #Dendrite-tree location choosing tries (default=2)
+    dendrite_formation_speed = 4 #Dendrite-tree location choosing tries (default=4)
     dendrite_formation_threshold = 0.97 #? Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
     nucleus_formation_distance = 15 #? The minimum distance to another neuron to format a new one
     neuron_network_expansion = True
     branching = False #! (default=False) EXPERIMENTAL
-    branching_chance = 80 #! (default=80) EXPERIMENTAL
+    branching_chance = 80    #! (default=80) EXPERIMENTAL
     branching_chaotic_threshold = 3 #? Threshold for the entanglement of the branches (default=3) (Lower number --> Less entanglement)
+    connection_tightness = 4 #? Threshold for the dendrite- and axon-connection tightness (default=4) (Lower number = More tight)
 
     signal_target = 1 #Listening to target origin
 
@@ -171,10 +172,11 @@ class NeuronSim:
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting axon
                         #Axon tree growth 
                         if sum(1 for coords in range_check if coords in used_coords) == 1: #checks if amount of structures found in range of random chosen coord is 1
-                            if len(self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 2)) <= NeuronSim.branching_chaotic_threshold: #checks structure amount in range of 2. (Prevents chaotic branching)
-                                self.manage_cell(NeuronSim.axon_color, [(x, y), part, tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
-                                self.manage_cell(NeuronSim.axon_color, [random_coords_choose, "A", tribe, origin, energy * multiplier]) #enlarge axon tree
-                                break
+                            if sum(1 for data in self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 3) if data[1] == "A") <= NeuronSim.connection_tightness:
+                                if len(self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 2)) <= NeuronSim.branching_chaotic_threshold: #checks structure amount in range of 2. (Prevents chaotic branching)
+                                    self.manage_cell(NeuronSim.axon_color, [(x, y), part, tribe, origin, energy * (1-multiplier)]) #changing energy level from origin axon
+                                    self.manage_cell(NeuronSim.axon_color, [random_coords_choose, "A", tribe, origin, energy * multiplier]) #enlarge axon tree
+                                    break
                         #Axon and Dendrite tribes connecting and creating a terminal
                         else:
                             for coords in range_check:
@@ -219,10 +221,11 @@ class NeuronSim:
                         multiplier = NeuronSim.dendrite_formation_threshold #threshold setting for energy level decrease when formatting dendrite
                         #Dendrite tree growth 
                         if sum(1 for coords in range_check if coords in used_coords) == 1: #checks if amount of structures found in range of random chosen coord is 1
-                            if len(self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 2)) <= NeuronSim.branching_chaotic_threshold: #checks structure amount in range of 2. (Prevents chaotic branching)
-                                self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
-                                self.manage_cell(NeuronSim.dendrite_color, [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
-                                break                        
+                            if sum(1 for data in self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 3) if data[1] == "D") <= NeuronSim.connection_tightness:
+                                if len(self.neighbor_in_radius(random_coords_choose[0], random_coords_choose[1], 2)) <= NeuronSim.branching_chaotic_threshold: #checks structure amount in range of 2. (Prevents chaotic branching)
+                                    self.manage_cell(NeuronSim.dendrite_color, [(x, y), "D", tribe, origin, energy * (1-multiplier)]) #changing energy level from origin dendrite
+                                    self.manage_cell(NeuronSim.dendrite_color, [random_coords_choose, "D", tribe, origin, energy * multiplier]) #enlarge dendrite tree
+                                    break                        
                     print("step: dendrite formation")
                     continue
 
