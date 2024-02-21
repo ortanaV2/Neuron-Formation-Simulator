@@ -5,25 +5,25 @@ import random
 class NeuronSim:
     #* Simulation settings and thresholds
     tempset = [[(165, 100), "N", "FF0F", 1, 1.0], [(135, 100), "N", "FF1F", 2, 1.0], [(142, 125), "N", "FF2F", 3, 1.0]] #? Simulation Starting Point Structure
-    mutation_threshold = 6 #? mutation threshold for nucleus formation (default=6) (Lower number --> Higher frequency)
-    calculation_speed = 250 #Simulation updating-speed (in ms)
-    dendrite_formation_speed = 4 #Dendrite-tree location choosing tries (default=4)
-    dendrite_formation_threshold = 0.97 #? Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
-    nucleus_formation_distance = 15 #? The minimum distance to another neuron to format a new one
-    neuron_network_expansion = True
-    branching = False #! (default=False) EXPERIMENTAL
-    branching_chance = 80    #! (default=80) EXPERIMENTAL
-    branching_chaotic_threshold = 3 #? Threshold for the entanglement of the branches (default=3) (Lower number --> Less entanglement)
-    connection_tightness = 4 #? Threshold for the dendrite- and axon-connection tightness (default=4) (Lower number = More tight)
+    mutation_threshold: int = 6 #? mutation threshold for nucleus formation (default=6) (Lower number --> Higher frequency)
+    calculation_speed: int = 250 #Simulation updating-speed (in ms)
+    dendrite_formation_speed: int = 4 #Dendrite-tree location choosing tries (default=4)
+    dendrite_formation_threshold: float = 0.97 #? Energy loss when dendrites are formatting (default=0.97) (Higher number --> Longer dendrites)
+    nucleus_formation_distance: int = 15 #? The minimum distance to another neuron to format a new one
+    neuron_network_expansion: bool = True
+    branching: bool = False #! (default=False) EXPERIMENTAL
+    branching_chance: int = 80    #! (default=80) EXPERIMENTAL
+    branching_chaotic_threshold: int = 3 #? Threshold for the entanglement of the branches (default=3) (Lower number --> Less entanglement)
+    connection_tightness: int = 4 #? Threshold for the dendrite- and axon-connection tightness (default=4) (Lower number = More tight)
 
-    signal_target = 1 #Listening to target origin
+    signal_target: int = 1 #Listening to target origin
 
     #* Simulation Graphics
-    nucleus_color = "#333333"
-    soma_color = "#4a4a4a"
-    dendrite_color = "#616161"
-    axon_color = "#4f4f4f"
-    terminal_color = "#8a8888"
+    nucleus_color: str = "#333333"
+    soma_color: str = "#4a4a4a"
+    dendrite_color: str = "#616161"
+    axon_color: str = "#4f4f4f"
+    terminal_color: str = "#8a8888"
 
     #* Program logic (do not change)
     first_text = True #program logic (ignore)
