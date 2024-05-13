@@ -1,5 +1,5 @@
 # Neuron Formation Simulator
-![](https://cdn.discordapp.com/attachments/810456487729168415/1195716206703951882/image.png?ex=65b5007f&is=65a28b7f&hm=dd8d75089833a7f118d16f95321dad2532d21a0834f887b5a9ba5df3b6ca08c1&)
+![](https://github.com/ortanaV2/Neuron-Formation-Simulator/blob/main/PreviewPicture.png?raw=true)
 
 Video about the Project: https://youtu.be/JZToyWf-heQ 
 ## Settings and Thresholds
