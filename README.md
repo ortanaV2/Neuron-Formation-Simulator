@@ -1,4 +1,4 @@
-# Neuron Growing Simulator
+# Neural Development Simulation
 
 The Neuron Growing Simulator is a graphical simulation tool that models the development and connection of neural cells at a cellular level. It uses basic biological principles such as soma, dendrites, axons, and nucleus formation to visualize a growing neural network in real-time.
 
